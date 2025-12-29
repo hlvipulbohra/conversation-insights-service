@@ -11,6 +11,25 @@ const DEAD_LETTER_QUEUE = QUEUE_NAMES.DEAD_LETTER_QUEUE
 const CALLS_UPLOAD_QUEUE = QUEUE_NAMES.CALLS_UPLOAD_QUEUE
 const CALLS_PROCESSING_QUEUE = QUEUE_NAMES.CALLS_PROCESSING_QUEUE
 
+const deleteFile = async (filePath: string) => {
+    try {
+        // Check if file exists first
+        const exists = await fs
+            .stat(filePath)
+            .then(() => true)
+            .catch(() => false)
+        if (!exists) {
+            logger.warn('File does not exist, skipping delete:', filePath)
+            return
+        }
+
+        await fs.unlink(filePath)
+        logger.info('Deleted local file:', filePath)
+    } catch (err: any) {
+        logger.error(`Failed to delete local file ${filePath}`, err?.message)
+    }
+}
+
 const processCallUpload = async (
     call: CallRecord,
     msg: ConsumeMessage,
@@ -28,6 +47,7 @@ const processCallUpload = async (
         await updateCallUrl(call.id, publicId)
 
         const signedUrl = generateSignedUrl(publicId)
+        const filePath = call.audioUrl
         call.audioUrl = signedUrl
 
         await sendToQueue(CALLS_PROCESSING_QUEUE, call)
@@ -35,12 +55,7 @@ const processCallUpload = async (
         logger.info(`Successfully processed upload for call ID: ${call.id}`)
 
         // Delete local file safely
-        try {
-            await fs.unlink(call.audioUrl)
-            logger.info(`Deleted local file for call ID: ${call.id}`)
-        } catch (fsErr) {
-            logger.error(`Failed to delete local file for call ID: ${call.id}`)
-        }
+        await deleteFile(filePath)
 
         channel.ack(msg)
     } catch (error: any) {

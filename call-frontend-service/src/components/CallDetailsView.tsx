@@ -30,8 +30,9 @@ type CallDetailsProps = {
     }
 }
 
-const msToTime = (ms: number) => {
-    if (ms < 0) return ms
+const msToTime = (timestr: number) => {
+    let ms = parseTimestampToMs(timestr)
+    if (ms < 0) return timestr
     const totalSeconds = Math.floor(ms / 1000)
     const seconds = totalSeconds % 60
     const totalMinutes = Math.floor(totalSeconds / 60)
@@ -43,6 +44,44 @@ const msToTime = (ms: number) => {
         `${minutes.toString().padStart(2, '0')}:` +
         `${seconds.toString().padStart(2, '0')}`
     )
+}
+
+const parseTimestampToMs = (value: string | number): number => {
+    // if time is in milliseconds
+    if (typeof value === 'number') return value
+
+    // Trim
+    const ts = value.trim()
+
+    // pure number string
+    if (/^\d+$/.test(ts)) return parseInt(ts, 10)
+
+    // to parse formats like 0:04.720 OR 01:02:03.450
+    const parts = ts.split(':')
+    let hours = 0,
+        minutes = 0,
+        seconds = 0,
+        millis = 0
+
+    if (parts.length === 2) {
+        // M:SS.mmm
+        minutes = parseInt(parts[0], 10)
+        const [sec, ms = '0'] = parts[1].split('.')
+        seconds = parseInt(sec, 10)
+        millis = parseInt(ms.padEnd(3, '0'), 10)
+    } else if (parts.length === 3) {
+        // H:MM:SS.mmm
+        hours = parseInt(parts[0], 10)
+        minutes = parseInt(parts[1], 10)
+        const [sec, ms = '0'] = parts[2].split('.')
+        seconds = parseInt(sec, 10)
+        millis = parseInt(ms.padEnd(3, '0'), 10)
+    } else {
+        console.log('Unsupported timestamp format: ' + value)
+        return 0
+    }
+
+    return ((hours * 60 + minutes) * 60 + seconds) * 1000 + millis
 }
 
 export default function CallDetailsView({ data }: CallDetailsProps) {
@@ -135,12 +174,13 @@ export default function CallDetailsView({ data }: CallDetailsProps) {
                         (e: any, idx: number) => (
                             <Badge
                                 key={idx}
-                                label={e.emotion}
+                                label={e.emotion?.toUpperCase()}
                                 value={msToTime(e.timestamp)}
                                 color={
-                                    e.emotion === 'NEGATIVE'
+                                    e.emotion?.toUpperCase() === 'NEGATIVE'
                                         ? '#DC2626'
-                                        : e.emotion === 'POSITIVE'
+                                        : e.emotion?.toUpperCase() ===
+                                            'POSITIVE'
                                           ? '#16A34A'
                                           : '#6B7280'
                                 }
@@ -151,10 +191,10 @@ export default function CallDetailsView({ data }: CallDetailsProps) {
             </div>
 
             {/* RAW JSON */}
-            <div style={styles.sectionCard}>
+            {/* <div style={styles.sectionCard}>
                 <h3 style={styles.sectionTitle}>Raw JSON</h3>
                 <pre style={styles.json}>{JSON.stringify(data, null, 2)}</pre>
-            </div>
+            </div> */}
         </div>
     )
 }
