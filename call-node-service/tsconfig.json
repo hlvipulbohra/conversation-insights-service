@@ -1,0 +1,16 @@
+{
+    // Visit https://aka.ms/tsconfig to read more about this file
+    "compilerOptions": {
+        "target": "ES2020",
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "esModuleInterop": true, // allows import express from 'express'
+        "forceConsistentCasingInFileNames": true,
+        "strict": true,
+        "skipLibCheck": true,
+        "outDir": "./dist",
+        "types": ["node"] // includes Node types
+    },
+    "include": ["src/**/*.ts"],
+    "exclude": ["node_modules"]
+}
