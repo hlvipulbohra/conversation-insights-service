@@ -20,3 +20,4 @@ CREATE TABLE IF NOT EXISTS calls_insights (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE INDEX idx_calls_insights_call_id ON calls_insights(call_id);
