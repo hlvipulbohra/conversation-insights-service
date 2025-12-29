@@ -14,7 +14,7 @@ services:
         image: postgres:16
         container_name: postgres
         ports:
-            - '5431:5432'
+            - '5432:5432'
         environment:
             POSTGRES_USER: call_user
             POSTGRES_PASSWORD: call_pass
